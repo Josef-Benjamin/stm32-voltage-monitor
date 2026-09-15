@@ -6,7 +6,7 @@ A breadboard DC voltage monitor built with a **NUCLEO-F411RE**, an SSD1306 OLED 
 
 ![STM32 voltage monitor prototype](https://raw.githubusercontent.com/Josef-Benjamin/hebrew-speaker-hub/main/public/media/stm32/overview.jpg)
 
-Demonstration video: replacement pending. The existing portfolio video asset fails decoding validation.
+[Watch the prototype demonstration](https://josef-benjamin.lovable.app/projects/stm32-voltage-monitor#demo)
 
 ## Features
 
@@ -124,7 +124,7 @@ Useful STM32CubeIDE Live Expressions include `adc_raw`, `supply_voltage_avg`, `a
 
 ## Source and reproduction status
 
-The supplied application source is now available at [Core/Src/main.c](Core/Src/main.c). It is preserved as supplied. Photos are linked from the portfolio repository. The existing demonstration video requires replacement with the original recording.
+The supplied application source is now available at [Core/Src/main.c](Core/Src/main.c). It is preserved as supplied. Photos are linked from the portfolio repository. The original demonstration recording is available on the project page (58.97 seconds, 910 × 512), with no additional compression.
 
 This is **not yet a complete, standalone STM32CubeIDE project**: the repository does not contain the original `.ioc`, `main.h`, HAL/MSP support files, startup code or linker script.
 
