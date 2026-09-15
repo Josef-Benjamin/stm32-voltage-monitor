@@ -2,7 +2,11 @@
 
 A breadboard DC voltage monitor built with a **NUCLEO-F411RE**, an SSD1306 OLED and a B10K potentiometer. The device displays the measured input voltage and a user-adjustable undervoltage threshold.
 
-[Josef Benjamin's portfolio](https://josef-benjamin.lovable.app/)
+[Project page](https://josef-benjamin.lovable.app/projects/stm32-voltage-monitor) · [Application source](Core/Src/main.c)
+
+![STM32 voltage monitor prototype](https://raw.githubusercontent.com/Josef-Benjamin/hebrew-speaker-hub/main/public/media/stm32/overview.jpg)
+
+[Watch the prototype demonstration](https://github.com/Josef-Benjamin/hebrew-speaker-hub/blob/main/public/media/stm32/demo.mp4)
 
 ## Features
 
@@ -91,8 +95,47 @@ The screen has intermittently gone blank while measurements and the alarm contin
 
 Setting `oled_reinit_request` to 1 invokes OLED initialization and restored the display in the observed test without resetting the MCU. The cause has **not** been established; this prototype should not be described as fully reliable or suitable for protection duties.
 
+## Firmware configuration
+
+These values come from the supplied [main.c](Core/Src/main.c):
+
+| Setting | Implementation |
+|---|---|
+| System clock | 84 MHz, PLL sourced from the internal HSI oscillator |
+| ADC1 | 12-bit, software-triggered single conversions, sequential channel selection |
+| ADC sampling time | 480 ADC cycles per channel |
+| Voltage filter | 16-sample moving average; startup uses only collected samples |
+| Potentiometer filter | Exponential smoothing, alpha = 0.2; initialized from the first valid reading |
+| Main loop | 50 ms delay plus ADC, display and processing time |
+| OLED refresh | At most once per 500 ms interval, when a valid voltage sample is available |
+| Display driver | Local SSD1306 framebuffer renderer, 128 × 64 pixels, enlarged numeric glyphs |
+| I2C1 | 100 kHz, 7-bit address 0x3C (shifted for the HAL API) |
+| USART2 | Initialized at 115200 baud, 8N1; no UART transmission in this application |
+
+### Error handling and debugging
+
+- A failed A0 conversion increments `adc_errors`, leaves the last measurement intact and skips alarm/display updates for that loop.
+- A failed A1 conversion increments `adc_errors_a1` and retains the previous threshold.
+- A display-transfer failure records the I2C error, reinitializes the I2C peripheral and attempts one additional frame transfer.
+- `oled_reinit_request = 1` requests a full OLED initialization from the main loop. This can be set through the debugger.
+- If initial OLED initialization fails, regular display updates stay disabled until initialization succeeds through a manual request. This is not automatic full-display recovery.
+
+Useful STM32CubeIDE Live Expressions include `adc_raw`, `supply_voltage_avg`, `adc_raw_a1`, `alarm_on_voltage`, `alarm_off_voltage`, `low_voltage_alarm`, `adc_errors`, `oled_init_ok`, `oled_errors` and `oled_i2c_error`.
+
 ## Source and reproduction status
 
-This repository currently documents the tested prototype. The final complete STM32CubeIDE project and media have not yet been uploaded. It is not currently a standalone buildable firmware distribution.
+The supplied application source is now available at [Core/Src/main.c](Core/Src/main.c). It is preserved as supplied. Photos and the demonstration video are linked from the portfolio repository.
+
+This is **not yet a complete, standalone STM32CubeIDE project**: the repository does not contain the original `.ioc`, `main.h`, HAL/MSP support files, startup code or linker script.
+
+To integrate the application into a NUCLEO-F411RE project:
+
+1. Create or open the matching STM32CubeIDE/CubeMX project and generate the required STM32F4 HAL and startup files.
+2. Configure PA0 and PA1 as ADC analog inputs, I2C1 on PB8/PB9, USART2, and the board's LD2/B1 definitions. Check the generated MSP initialization: PA0 and the I2C/UART pin setup are not provided by this file alone.
+3. Use this file as `Core/Src/main.c` and reconcile generated configuration before building. Some configuration lives outside USER CODE blocks, so regeneration needs review.
+4. Match the divider resistor constants and ADC reference to the actual hardware, then build and flash through ST-LINK.
+5. Compare readings against a multimeter and verify alarm transitions in both directions. Check the OLED diagnostics during an extended run.
+
+The source has been reviewed against this documentation; a fresh build and hardware regression test have not been performed from this repository.
 
 Development used STM32CubeIDE, STM32CubeMX and STM32 HAL. The physical circuit was assembled and tested by Josef Benjamin, with AI assistance for explanations and firmware development.
